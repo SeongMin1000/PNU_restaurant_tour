@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+        <style>
+            h1,h2,nav a{
+                text-align: center;
+                color:white;
+            }
+
+            h1,nav a:hover{
+                background-color : mediumseagreen;
+            }
+
+            h1{
+                height:45px;
+                font-size: 30px;                
+                margin:0 0 0 0 ;
+                padding: 10px;
+                
+            }
+
+            nav{
+
+                height: 40px;
+                background-color: rgb(243, 171, 89);
+                overflow: auto;
+            }
+                          
+            nav a{
+                float: left;
+                padding-top:8px;
+                padding-bottom: 12px;
+                text-decoration: none;
+                font-size: 17px;
+                width: 18%;
+            }
+
+            button{
+                height: 40px;
+                width: 117px;
+                float: right;
+
+            }
+
+            input[type=text]{
+                height: 34px;
+                width: 405px;
+            }
+
+            label{
+                border-radius: 10px;
+                padding-top: 7px;
+                padding-bottom: 11px;
+                background-color: yellowgreen;
+            }
+
+            img{
+                height: 40px;
+                width: 5%;
+                float: left;
+            }
+
+            h2{
+                width: 40%;
+                background-color: skyblue;
+                margin: 0;
+                height: 50px;
+                padding-top: 8px;
+            }
+
+            i{
+                margin-right: 10px;
+
+            }
+
+            section{
+                border: solid 5px green;
+                width: 577px;
+                
+            }
+
+            h3{
+                background-color: darkseagreen;
+                height: 20px;
+                color:white;
+                padding:10px;
+                margin: 0;
+            }
+
+            ul{
+                border:solid 1px black;
+                margin:1px;
+                height:80px;
+            }
+
+            ul p{
+                font-size: 15px;
+                margin: 3px;
+
+            }
+
+            li.la{
+                margin: 3px;
+                margin-left: 22px;
+                
+            }
+
+            #tb10{
+                text-align: center;
+            }
+            
+            #map{
+                float:right;
+                margin-top: 0%;
+                width: 60%;
+                height: 1350px;                
+            }    /*css: 18개+*/
+        </style>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    var tbl = document.getElementById('tbl0');
+
+                    var parsed = JSON.parse(this.responseText);
+                    
+                    for (i in parsed.getFoodKr.item) { //공공데이터 포털 api로 받은 맛집 정보 파싱
+                        var cur = parsed.getFoodKr.item[i];
+                        var pid = "name" + i;
+                        tbl.innerHTML += "<h3>" + cur.TITLE + "</h3>"
+                        tbl.innerHTML +="<ul><p>주소: " + cur.ADDR1 + "</p><p>전화번호: " + cur.CNTCT_TEL
+                             +"</p>"+ "<li class=la>" + cur.USAGE_DAY_WEEK_AND_TIME+ "</li></ul>"  //element: 4개+                                                                  
+                    }
+                }           
+            });
+
+            function displayResponse(){  
+
+                xhr.open("GET", "http://localhost:5500/food")
+                xhr.send();
+            }
+            var markers=[];
+            $(document).ready(function(){
+                          
+                var i=1
+                $("a").click(function(){
+                    i+=1
+                    if (i%2==0){ //번갈아 가며 클릭 시 css변환
+                        $(this).css("background-color","darkseagreen") //css: 19개
+                        menu= $(this).attr('id') //클릭한 값의 id
+
+                        ps.keywordSearch(menu, placesSearchCB); //클릭한 값의 id로 검색
+
+                        //위치 정보 얻기
+                        function placesSearchCB (data, status, pagination) {
+                            if (status === kakao.maps.services.Status.OK) {
+                                var bounds = new kakao.maps.LatLngBounds();
+
+                                for (var i=0; i<data.length; i++) {
+                                    displayMarker(data[i]);    
+                                    bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
+                                }      
+                            } 
+                        }
+                        //마커 표시 함수
+                        function displayMarker(place) {
+                            var marker = new kakao.maps.Marker({
+                                map: map,
+                                position: new kakao.maps.LatLng(place.y, place.x) 
+                            });
+
+                            markers.push(marker);//markers에 marker정보 담기(초기화하기 위함)
+
+                            kakao.maps.event.addListener(marker, 'click', function() { //마커 클릭 시 이름 표시
+                                infowindow.setContent('<div style="padding:5px;font-size:12px;">' + place.place_name + '</div>');
+                                infowindow.open(map, marker);
+                            });
+                        }
+                    }
+                    else{//처음 css상태로 변환
+                        
+                        $(this).css("background-color","rgb(243, 171, 89)") //css: 총 20개
+                        $(this).removeAttr("style")
+                    }
+                }) 
+                
+                $("#sear").click(function(){  //검색어 입력으로 지도 표시
+                    restaurant = document.getElementById('rest').value  //input창의 value를 검색값으로 
+                    
+                    if (restaurant==''){  //input창에 아무것도 입력하지 않을 경우
+                        alert('검색어를 입력하세요.')
+                    }
+                    else{
+                        ps.keywordSearch(restaurant , placesSearchCB); 
+
+                        //위치 정보 얻기
+                        function placesSearchCB (data, status, pagination) {
+                            if (status === kakao.maps.services.Status.OK) {
+
+                                var bounds = new kakao.maps.LatLngBounds();
+
+                                for (var i=0; i<data.length; i++) {
+                                    displayMarker(data[i]);    
+                                    bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
+                                }       
+                            } 
+                        }
+                        //마커 표시 함수
+                        function displayMarker(place) {
+                            
+                            var marker = new kakao.maps.Marker({
+                                map: map,
+                                position: new kakao.maps.LatLng(place.y, place.x) 
+                            });
+
+                            markers.push(marker);//markers에 marker정보 담기(초기화하기 위함)
+
+                            kakao.maps.event.addListener(marker, 'click', function() {
+                                infowindow.setContent('<div style="padding:5px;font-size:12px;">' + place.place_name + '</div>');
+                                infowindow.open(map, marker);
+                            });
+                        }
+                    }                   
+                })  
+            });
+
+            function removeMarker() {//markers안에 있는 marker들 반복문을 통해 삭제
+            for ( var i = 0; i < markers.length; i++ ) {
+            markers[i].setMap(null);
+            }   
+            markers = [];
+            }          
+        </script>
+    </head>
+<body>
+<h1>부산(대) 맛집 탐방</h1>
+<nav><!--id값으로 키워드 검색 및 버튼-함수 조작으로 초기화-->
+    <img src='한식.png'>
+    <a id="부산대 한식">한식</a>
+    <img src='중식.png'>
+    <a id="부산대 중식">중식</a>
+    <img src='일식.png'>
+    <a id="부산대 일식">일식</a>
+    <img src='양식.png'>
+    <a id="부산대 양식">양식</a>
+    <button onclick="removeMarker()">초기화</button>
+</nav>
+
+<div id="map"></div>
+
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=014523374878c04268ae96e3ff4af092&libraries=services"></script>
+<script>
+//지도 불러오기
+var infowindow = new kakao.maps.InfoWindow({zIndex:1});
+
+var mapContainer = document.getElementById('map'), 
+    mapOption = {
+        center: new kakao.maps.LatLng(35.231, 129.083), 
+        level: 4 
+    };  
+
+ 
+var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+var ps = new kakao.maps.services.Places();
+
+</script>   
+
+<!--input id값으로 키워드 검색-->
+<button id="sear">검색하기</button>
+<label>음식점:</label>
+<input type="text" id="rest" placeholder=" '부산대' 포함 입력">
+
+
+<h2 onclick="displayResponse()"><i class="material-icons">restaurant</i>부산 추천 맛집</h2><!--공동데이터 포털 api불러오기-->
+
+<section id="tbl0"></section><!--element: 총 15개-->
+
+</body>
+</html>
